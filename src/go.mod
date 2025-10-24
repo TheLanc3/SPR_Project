@@ -1,4 +1,4 @@
-module spr/project
+module spr-project
 
 go 1.25.3
 
