@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"spr-project/models"
 
 	"gorm.io/driver/sqlite"
@@ -10,7 +11,8 @@ import (
 func Init(path string) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
-		panic("Database initialization failed: ")
+		fmt.Println(err)
+		panic("Database initialization failed")
 	}
 
 	err = db.AutoMigrate(

@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"spr-project/database"
+)
 
 func main() {
-	fmt.Println("Hello world")
+	database.Init("hello.db")
+	fmt.Println("Success")
 }
