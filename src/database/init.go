@@ -25,7 +25,8 @@ func Init(path string) *gorm.DB {
 		&models.Supplier{},
 	)
 	if err != nil {
-		panic("Database initialization failed: ")
+		fmt.Println(err)
+		panic("Database initialization failed")
 	}
 
 	return db
