@@ -66,9 +66,11 @@ func (repo *ProductRepository) UpdatePrice(ctx context.Context,
 }
 
 func (repo *ProductRepository) UpdateQuantity(ctx context.Context,
-	newQuantity int, id int64) {
-	repo.dB.WithContext(ctx).
+	newQuantity int, id int64) error {
+	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
 		Update("quantity", newQuantity)
+
+	return result.Error
 }

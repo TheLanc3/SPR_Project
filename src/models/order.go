@@ -12,6 +12,6 @@ type Order struct {
 	Positions  []Item       `gorm:"foreignKey:OrderId;references:Id"`
 	Total      int          `gorm:"column:total"`
 	CreatedAt  time.Time    `gorm:"column:created_at;serializer:unixtime;autoCreateTime"`
-	Status     enums.Status `gorm:"column:status"`
+	Status     enums.Status `gorm:"column:status;default:0"`
 	UpdatedAt  time.Time    `gorm:"column:created_at;serializer:unixtime;autoUpdateTime"`
 }
