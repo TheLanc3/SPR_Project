@@ -12,7 +12,7 @@ type ShipmentRepository struct {
 	dB *gorm.DB
 }
 
-func (ShipmentRepository) InitRepo(db *gorm.DB) *ShipmentRepository {
+func (ShipmentRepository) New(db *gorm.DB) *ShipmentRepository {
 	repo := ShipmentRepository{dB: db}
 	return &repo
 }

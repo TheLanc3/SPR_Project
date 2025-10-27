@@ -11,7 +11,7 @@ type CustomerRepository struct {
 	dB *gorm.DB
 }
 
-func (CustomerRepository) InitRepo(db *gorm.DB) *CustomerRepository {
+func (CustomerRepository) New(db *gorm.DB) *CustomerRepository {
 	repo := CustomerRepository{dB: db}
 	return &repo
 }
