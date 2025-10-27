@@ -31,7 +31,7 @@ func (repo *StockRepository) GetStock(ctx context.Context,
 	return stock, nil
 }
 
-func (repo *StockRepository) AddCustomer(ctx context.Context,
+func (repo *StockRepository) AddStock(ctx context.Context,
 	name string, phone string, email string, address string) (*models.Stock, error) {
 	stock := models.Stock{
 		Name:    name,
