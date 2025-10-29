@@ -17,5 +17,5 @@ go build
 
 И затем можно запускать исполнительный файл
 ```shell
-./project //Если скомпилировали в Windows - `./project.exe`
+./spr-project 'All Fresh.txt' //Если скомпилировали в Windows - `./spr-project.exe`
 ```
