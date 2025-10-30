@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"spr-project/database"
 	"strconv"
 	"strings"
 )
@@ -37,11 +38,27 @@ func readFile(filename string, prodSlice []ProductCatalog) ([]ProductCatalog, er
 				if j != -1 {
 					item.Description = stringAfter[:j]
 					if j+1 <= len(stringAfter) {
-						price, erR := strconv.Atoi(stringAfter[j+1:])
-						if erR != nil {
-							log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
+						priceQuantity := stringAfter[j+1:]
+						m := strings.Index(priceQuantity, charToFind)
+						if m != -1 {
+							price, erR := strconv.Atoi(priceQuantity[:m])
+							if erR != nil {
+								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
+							}
+							item.Price = price
+							quantity, erR := strconv.Atoi(priceQuantity[m+1:])
+							if erR != nil {
+								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
+							}
+							item.Quantity = quantity
+						} else {
+							price, erR := strconv.Atoi(priceQuantity)
+							if erR != nil {
+								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
+							}
+							item.Price = price
 						}
-						item.Price = price
+
 					} else {
 						return prodSlice, fmt.Errorf("price is absent for Name: %s", item.Name)
 					}
@@ -62,6 +79,7 @@ func readFile(filename string, prodSlice []ProductCatalog) ([]ProductCatalog, er
 }
 
 func main() {
+	database.Init("stock.db")
 	args := os.Args
 	filename := args[1]
 	length := len(os.Args)
