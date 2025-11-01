@@ -30,7 +30,10 @@ func (service *OrderService) CreateNewOrder(ctx context.Context,
 		itemRepo := repositories.NewItemRepository(tx)
 
 		for _, position := range data.Positions {
-			productRepo.DecreaseQuantity(ctx, position.Quantity, position.ProductId)
+			if err := productRepo.DecreaseQuantity(ctx,
+				position.Quantity, position.ProductId); err != nil {
+				return err
+			}
 		}
 
 		order, err := orderRepo.AddOrder(ctx, data.CustomerId, data.Total)
@@ -68,47 +71,41 @@ func (service *OrderService) UpdateOrderStatus(ctx context.Context,
 }
 
 func (service *OrderService) GetOrdersByCustomer(ctx context.Context,
-	customerId int64, filter enums.OrderType) ([]models.Order, error) {
+	customerId int64, filter enums.OrderType, limit int) ([]models.Order, error) {
 	var orders []models.Order
+	var Error error
+	if limit < 3 {
+		limit = 5
+	}
 
-	err := service.dB.Transaction(func(tx *gorm.DB) error {
-		repo := repositories.NewOrderRepository(tx)
+	repo := repositories.NewOrderRepository(service.dB)
 
-		switch filter {
-		case enums.All:
-			{
-				data, err := repo.GetOrdersByCustomer(ctx, customerId, 5)
-				if err != nil {
-					return err
-				}
-				orders = data
-				break
-			}
-		case enums.OnlyUnfinished:
-			{
-				data, err := repo.GetUnfinishedOrdersByCustomer(ctx, customerId, 5)
-				if err != nil {
-					return err
-				}
-				orders = data
-				break
-			}
-		case enums.OnlyDelivered:
-			{
-				data, err := repo.GetDeliveredOrdersByCustomer(ctx, customerId, 5)
-				if err != nil {
-					return err
-				}
-				orders = data
-				break
-			}
+	switch filter {
+	case enums.All:
+		{
+			data, err := repo.GetOrdersByCustomer(ctx, customerId, limit)
+			Error = err
+			orders = data
+			break
 		}
+	case enums.OnlyUnfinished:
+		{
+			data, err := repo.GetUnfinishedOrdersByCustomer(ctx, customerId, limit)
+			Error = err
+			orders = data
+			break
+		}
+	case enums.OnlyDelivered:
+		{
+			data, err := repo.GetDeliveredOrdersByCustomer(ctx, customerId, limit)
+			Error = err
+			orders = data
+			break
+		}
+	}
 
-		return nil
-	})
-
-	if err != nil {
-		return []models.Order{}, err
+	if Error != nil {
+		return []models.Order{}, Error
 	}
 
 	return orders, nil
