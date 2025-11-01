@@ -24,11 +24,7 @@ func (service *OrderService) CreateNewOrder(ctx context.Context,
 		itemRepo := repositories.NewItemRepository(tx)
 
 		for _, position := range data.Positions {
-			product, err := productRepo.GetProduct(ctx, position.ProductId)
-			if err != nil || product.Quantity < position.Quantity {
-				return err
-			}
-			productRepo.UpdateQuantity(ctx, product.Quantity-position.Quantity, position.ProductId)
+			productRepo.DecreaseQuantity(ctx, position.Quantity, position.ProductId)
 		}
 
 		order, err := orderRepo.AddOrder(ctx, data.CustomerId, data.Total)
@@ -37,10 +33,8 @@ func (service *OrderService) CreateNewOrder(ctx context.Context,
 		}
 		result = *order
 
-		for _, position := range data.Positions {
-			if _, err := itemRepo.AddItem(ctx, order.Id, position.ProductId, position.Quantity); err != nil {
-				return err
-			}
+		if _, err := itemRepo.AddItems(ctx, order.Id, data.Positions); err != nil {
+			return err
 		}
 
 		return nil

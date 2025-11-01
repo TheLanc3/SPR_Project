@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"spr-project/models"
 
 	"gorm.io/gorm"
@@ -65,12 +66,29 @@ func (repo *ProductRepository) UpdatePrice(ctx context.Context,
 		Update("price", newPrice)
 }
 
-func (repo *ProductRepository) UpdateQuantity(ctx context.Context,
-	newQuantity int, id int64) error {
+func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
+	increment int, id int64) error {
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("quantity", newQuantity)
+		Update("quantity", gorm.Expr("quantity - ?", increment))
 
 	return result.Error
+}
+
+func (repo *ProductRepository) DecreaseQuantity(ctx context.Context,
+	decrement int, id int64) error {
+	result := repo.dB.WithContext(ctx).
+		Model(&models.Product{}).
+		Where("id = ?", id).
+		Where("quantity >= ?", decrement).
+		Update("quantity", gorm.Expr("quantity - ?", decrement))
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("insufficient stock or product not found")
+	}
+	return nil
 }
