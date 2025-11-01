@@ -21,6 +21,8 @@ func (repo *SupplierRepository) GetSupplier(ctx context.Context,
 	var supplier models.Supplier
 
 	result := repo.dB.WithContext(ctx).
+		Preload("Products").
+		Preload("Shipments").
 		Where("id = ?", id).
 		First(&supplier)
 

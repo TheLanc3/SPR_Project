@@ -71,7 +71,7 @@ func (service *OrderService) UpdateOrderStatus(ctx context.Context,
 }
 
 func (service *OrderService) GetOrdersByCustomer(ctx context.Context,
-	customerId int64, filter enums.OrderType, limit int) ([]models.Order, error) {
+	customerId int64, filter enums.OrderType, limit int) (*[]models.Order, error) {
 	var orders []models.Order
 	var Error error
 	if limit < 3 {
@@ -85,28 +85,28 @@ func (service *OrderService) GetOrdersByCustomer(ctx context.Context,
 		{
 			data, err := repo.GetOrdersByCustomer(ctx, customerId, limit)
 			Error = err
-			orders = data
+			orders = *data
 			break
 		}
 	case enums.OnlyUnfinished:
 		{
 			data, err := repo.GetUnfinishedOrdersByCustomer(ctx, customerId, limit)
 			Error = err
-			orders = data
+			orders = *data
 			break
 		}
 	case enums.OnlyDelivered:
 		{
 			data, err := repo.GetDeliveredOrdersByCustomer(ctx, customerId, limit)
 			Error = err
-			orders = data
+			orders = *data
 			break
 		}
 	}
 
 	if Error != nil {
-		return []models.Order{}, Error
+		return &[]models.Order{}, Error
 	}
 
-	return orders, nil
+	return &orders, nil
 }

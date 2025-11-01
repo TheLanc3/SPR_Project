@@ -29,7 +29,8 @@ func (service *StockService) GetStockById(ctx context.Context,
 }
 
 func (service *StockService) AddNewStock(ctx context.Context,
-	name string, phone string, email string, address string) (*models.Stock, error) {
+	name string, phone string, email string,
+	address string) (*models.Stock, error) {
 	var stock models.Stock
 
 	err := service.dB.Transaction(func(tx *gorm.DB) error {
