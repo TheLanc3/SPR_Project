@@ -84,12 +84,20 @@ func (service *ProductService) RegisterProductShipments(ctx context.Context,
 	var shipments []models.Shipment
 
 	err := service.dB.Transaction(func(tx *gorm.DB) error {
-		repo := repositories.NewShipmentRepository(tx)
+		repoShipment := repositories.NewShipmentRepository(tx)
+		repoProduct := repositories.NewProductRepository(tx)
 
-		output, err := repo.AddShipments(ctx, data)
+		output, err := repoShipment.AddShipments(ctx, data)
 
 		if err != nil {
 			return err
+		}
+
+		for _, shipment := range data {
+			err := repoProduct.IncreaseQuantity(ctx, shipment.Quantity, shipment.ProductId)
+			if err != nil {
+				return err
+			}
 		}
 
 		shipments = *output

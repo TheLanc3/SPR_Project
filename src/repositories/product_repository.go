@@ -83,7 +83,13 @@ func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
 		Where("id = ?", id).
 		Update("quantity", gorm.Expr("quantity - ?", increment))
 
-	return result.Error
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("insufficient stock or product not found")
+	}
+	return nil
 }
 
 func (repo *ProductRepository) DecreaseQuantity(ctx context.Context,
