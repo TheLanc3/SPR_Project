@@ -16,8 +16,8 @@ type OrderService struct {
 }
 
 func NewOrderService(db *gorm.DB) *OrderService {
-	repo := OrderService{dB: db}
-	return &repo
+	service := OrderService{dB: db}
+	return &service
 }
 
 func (service *OrderService) CreateNewOrder(ctx context.Context,
