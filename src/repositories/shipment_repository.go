@@ -12,7 +12,7 @@ type ShipmentRepository struct {
 	dB *gorm.DB
 }
 
-func (ShipmentRepository) New(db *gorm.DB) *ShipmentRepository {
+func NewShipmentRepository(db *gorm.DB) *ShipmentRepository {
 	repo := ShipmentRepository{dB: db}
 	return &repo
 }

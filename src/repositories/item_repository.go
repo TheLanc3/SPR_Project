@@ -11,12 +11,12 @@ type ItemRepository struct {
 	dB *gorm.DB
 }
 
-func (ItemRepository) New(db *gorm.DB) *ItemRepository {
+func NewItemRepository(db *gorm.DB) *ItemRepository {
 	repo := ItemRepository{dB: db}
 	return &repo
 }
 
-func (repo *OrderRepository) AddItem(ctx context.Context,
+func (repo *ItemRepository) AddItem(ctx context.Context,
 	orderId int64, productId int64, quantity int) (*models.Item, error) {
 	order := models.Item{
 		OrderId:   orderId,

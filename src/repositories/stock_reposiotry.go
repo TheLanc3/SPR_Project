@@ -11,7 +11,7 @@ type StockRepository struct {
 	dB *gorm.DB
 }
 
-func (StockRepository) New(db *gorm.DB) *StockRepository {
+func NewStockRepository(db *gorm.DB) *StockRepository {
 	repo := StockRepository{dB: db}
 	return &repo
 }
