@@ -6,6 +6,6 @@ type Product struct {
 	Description string   `gorm:"column:description"`
 	Price       int      `gorm:"column:price"`
 	Quantity    int      `gorm:"column:quantity"`
-	SupplierId  string   `gorm:"column:supplier_id"`
+	SupplierId  int64    `gorm:"column:supplier_id"`
 	Supplier    Supplier `gorm:"foreignKey:SupplierId;references:Id"`
 }

@@ -1,81 +1,38 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"spr-project/database"
-	"strconv"
+	"spr-project/loader"
+	"spr-project/models"
+	"spr-project/terminal"
 	"strings"
+	"time"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-type ProductCatalog struct {
-	Name        string
-	Description string
-	Price       int
-	Quantity    int
-}
-
-func readFile(filename string, prodSlice []ProductCatalog) ([]ProductCatalog, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return prodSlice, fmt.Errorf("ошибка открытия файла: %w", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		s := scanner.Text()
-		charToFind := "\t"
-		var item ProductCatalog
-		index := strings.Index(s, charToFind)
-		if index != -1 {
-			item.Name = s[:index]
-			if index+1 <= len(s) {
-				stringAfter := s[index+1:]
-				j := strings.Index(stringAfter, charToFind)
-				if j != -1 {
-					item.Description = stringAfter[:j]
-					if j+1 <= len(stringAfter) {
-						priceQuantity := stringAfter[j+1:]
-						m := strings.Index(priceQuantity, charToFind)
-						if m != -1 {
-							price, erR := strconv.Atoi(priceQuantity[:m])
-							if erR != nil {
-								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
-							}
-							item.Price = price
-							quantity, erR := strconv.Atoi(priceQuantity[m+1:])
-							if erR != nil {
-								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
-							}
-							item.Quantity = quantity
-						} else {
-							price, erR := strconv.Atoi(priceQuantity)
-							if erR != nil {
-								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
-							}
-							item.Price = price
-						}
-
-					} else {
-						return prodSlice, fmt.Errorf("price is absent for Name: %s", item.Name)
-					}
-				} else {
-					return prodSlice, fmt.Errorf("description is absent for Name: %s", item.Name)
-				}
-			} else {
-				return prodSlice, fmt.Errorf("description and Price are absent for Name: %s", item.Name)
+func worker(id int, jobs <-chan int, results chan<- int, b *bool, supplierInventory []loader.ProductInventory) {
+	retVal := 0
+	for j := range jobs {
+		fmt.Println("worker", id, "started  job", j)
+		time.Sleep(100 * time.Millisecond)
+		switch j {
+		case 1: //The terminal
+			for *b {
+				*b = terminal.Terminal(supplierInventory)
+			}
+		default: //The stub for other cases
+			for *b {
+				time.Sleep(time.Second)
 			}
 		}
-		prodSlice = append(prodSlice, item)
+		fmt.Println("worker", id, "finished job", j)
+		results <- retVal
 	}
-
-	if err := scanner.Err(); err != nil {
-		return prodSlice, fmt.Errorf("ошибка чтения файла: %w", err)
-	}
-	return prodSlice, nil
 }
 
 func main() {
@@ -84,6 +41,7 @@ func main() {
 	filename := args[1]
 	length := len(os.Args)
 	uSage := "Usage: ./spr-project 'All Fresh.txt'"
+	var supplierInventory []loader.ProductInventory
 	if length > 2 {
 		fmt.Println(uSage)
 		os.Exit(1)
@@ -96,17 +54,60 @@ func main() {
 		} else {
 			supplierName = filename
 		}
-		var supplierCatalog []ProductCatalog
-		supplierCatalog, err := readFile(filename, supplierCatalog)
+		db, err := gorm.Open(sqlite.Open("stock.db"), &gorm.Config{})
+		if err != nil {
+			panic("failed to connect database")
+		}
+		var supplier models.Supplier
+		res := db.Where("name = ?", supplierName).First(&supplier)
+		var supplierId int64
+		if res.Error != nil {
+			if res.Error == gorm.ErrRecordNotFound {
+				fmt.Printf("Supplier %s not found.\n", supplierName)
+			} else {
+				fmt.Printf("Error retrieving supplier: %v\n", res.Error)
+			}
+		} else {
+			supplierId = supplier.Id
+		}
+
+		supplierInventory, err := loader.ReadFile(filename, supplierInventory)
 		if err != nil {
 			log.Fatal(err)
 		}
-		numberOfProducts := len(supplierCatalog)
-		fmt.Printf("%d lines was read for %s supplier\n", numberOfProducts, supplierName)
-		fmt.Println("The last item in the Catalog:")
-		fmt.Printf("Name:\t\t %s\n", supplierCatalog[numberOfProducts-1].Name)
-		fmt.Printf("Description:\t %s\n", supplierCatalog[numberOfProducts-1].Description)
-		fmt.Printf("Price:\t\t %d\n", supplierCatalog[numberOfProducts-1].Price)
-		fmt.Printf("Quantity:\t %d\n", supplierCatalog[numberOfProducts-1].Quantity)
+		for _, value := range supplierInventory {
+			// Retrieve a product by its name
+			var product models.Product
+			result := db.Where("name = ?", value.Name).First(&product)
+			//productRepo := repositories.New
+			if result.Error != nil {
+				if result.Error == gorm.ErrRecordNotFound {
+					db.FirstOrCreate(&models.Product{}, models.Product{Name: value.Name, Description: value.Description,
+						Price: value.Price, Quantity: value.Quantity, SupplierId: supplierId})
+				} else {
+					fmt.Printf("Error retrieving product: %v\n", result.Error)
+				}
+			} else {
+				//quantity := product.Quantity
+				//repositories.ProductRepository.UpdateQuantity(quantity+value.Quantity, product.Id)
+			}
+		}
+
 	}
+	jobs := make(chan int, 100)
+	results := make(chan int, 100)
+	work := true
+	for w := 1; w <= 3; w++ {
+		go worker(w, jobs, results, &work, supplierInventory)
+	}
+
+	for j := 1; j <= 10; j++ {
+		jobs <- j
+	}
+	close(jobs)
+
+	for a := 1; a <= 10; a++ {
+		<-results
+	}
+
 }
