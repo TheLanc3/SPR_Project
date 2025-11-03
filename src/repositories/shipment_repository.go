@@ -4,6 +4,7 @@ import (
 	"context"
 	"spr-project/enums"
 	"spr-project/models"
+	"spr-project/parameters"
 
 	"gorm.io/gorm"
 )
@@ -12,73 +13,40 @@ type ShipmentRepository struct {
 	dB *gorm.DB
 }
 
-func (ShipmentRepository) New(db *gorm.DB) *ShipmentRepository {
+func NewShipmentRepository(db *gorm.DB) *ShipmentRepository {
 	repo := ShipmentRepository{dB: db}
 	return &repo
 }
 
-func (repo *ShipmentRepository) GetShipment(ctx context.Context,
-	id int64) (models.Shipment, error) {
-	var shipment models.Shipment
-
-	result := repo.dB.WithContext(ctx).
-		Where("id = ?", id).
-		First(&shipment)
-
-	if result.Error != nil {
-		return models.Shipment{}, result.Error
-	}
-
-	return shipment, nil
-}
-
-func (repo *ShipmentRepository) GetShipmentsByProduct(ctx context.Context,
-	productId int64) ([]models.Shipment, error) {
+func (repo *ShipmentRepository) AddShipments(
+	ctx context.Context,
+	data []parameters.ShipmentData) (*[]models.Shipment, error) {
 	var shipments []models.Shipment
 
-	result := repo.dB.WithContext(ctx).
-		Where("product_id = ?", productId).
-		Order("id DESC").
-		Find(&shipments)
-
-	if result.Error != nil {
-		return []models.Shipment{}, result.Error
+	for _, shipment := range data {
+		shipments = append(shipments, models.Shipment{
+			ProductId:  shipment.ProductId,
+			Quantity:   shipment.Quantity,
+			SupplierId: shipment.SupplierId,
+		})
 	}
 
-	return shipments, nil
-}
-
-func (repo *ShipmentRepository) GetShipmentsBySupplier(ctx context.Context,
-	supplierId int64) ([]models.Shipment, error) {
-	var shipments []models.Shipment
-
 	result := repo.dB.WithContext(ctx).
-		Where("supplier_id = ?", supplierId).
-		Order("id DESC").
-		Find(&shipments)
-
-	if result.Error != nil {
-		return []models.Shipment{}, result.Error
-	}
-
-	return shipments, nil
-}
-
-func (repo *ShipmentRepository) AddShipment(
-	ctx context.Context, productId int64, quantity int,
-	supplierId int64, status enums.Status) (*models.Shipment, error) {
-	stock := models.Shipment{
-		ProductId:  productId,
-		Quantity:   quantity,
-		SupplierId: supplierId,
-		Status:     status}
-
-	result := repo.dB.WithContext(ctx).
-		Create(&stock)
+		Create(&shipments)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return &stock, nil
+	return &shipments, nil
+}
+
+func (repo *ShipmentRepository) UpdateShipmentStatus(ctx context.Context,
+	shipmentId int64, status enums.Status) error {
+	result := repo.dB.WithContext(ctx).
+		Model(&models.Shipment{}).
+		Where("id = ?", shipmentId).
+		Update("status = ?", status)
+
+	return result.Error
 }

@@ -12,13 +12,13 @@ type OrderRepository struct {
 	dB *gorm.DB
 }
 
-func (OrderRepository) New(db *gorm.DB) *OrderRepository {
+func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	repo := OrderRepository{dB: db}
 	return &repo
 }
 
 func (repo *OrderRepository) GetOrdersByCustomer(ctx context.Context,
-	customerId int64, limit int) ([]models.Order, error) {
+	customerId int64, limit int) (*[]models.Order, error) {
 	var orders []models.Order
 
 	if limit < 1 {
@@ -32,14 +32,14 @@ func (repo *OrderRepository) GetOrdersByCustomer(ctx context.Context,
 		Find(&orders)
 
 	if result.Error != nil {
-		return []models.Order{}, result.Error
+		return &[]models.Order{}, result.Error
 	}
 
-	return orders, nil
+	return &orders, nil
 }
 
 func (repo *OrderRepository) GetUnfinishedOrdersByCustomer(ctx context.Context,
-	customerId int64, limit int) ([]models.Order, error) {
+	customerId int64, limit int) (*[]models.Order, error) {
 	var orders []models.Order
 
 	if limit < 1 {
@@ -54,14 +54,14 @@ func (repo *OrderRepository) GetUnfinishedOrdersByCustomer(ctx context.Context,
 		Find(&orders)
 
 	if result.Error != nil {
-		return []models.Order{}, result.Error
+		return &[]models.Order{}, result.Error
 	}
 
-	return orders, nil
+	return &orders, nil
 }
 
 func (repo *OrderRepository) GetDeliveredOrdersByCustomer(ctx context.Context,
-	customerId int64, limit int) ([]models.Order, error) {
+	customerId int64, limit int) (*[]models.Order, error) {
 	var orders []models.Order
 
 	if limit < 1 {
@@ -76,10 +76,10 @@ func (repo *OrderRepository) GetDeliveredOrdersByCustomer(ctx context.Context,
 		Find(&orders)
 
 	if result.Error != nil {
-		return []models.Order{}, result.Error
+		return &[]models.Order{}, result.Error
 	}
 
-	return orders, nil
+	return &orders, nil
 }
 
 func (repo *OrderRepository) AddOrder(ctx context.Context,

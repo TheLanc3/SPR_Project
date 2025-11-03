@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"spr-project/models"
+	"spr-project/parameters"
 
 	"gorm.io/gorm"
 )
@@ -11,25 +12,28 @@ type ItemRepository struct {
 	dB *gorm.DB
 }
 
-func (ItemRepository) New(db *gorm.DB) *ItemRepository {
+func NewItemRepository(db *gorm.DB) *ItemRepository {
 	repo := ItemRepository{dB: db}
 	return &repo
 }
 
-func (repo *OrderRepository) AddItem(ctx context.Context,
-	orderId int64, productId int64, quantity int) (*models.Item, error) {
-	order := models.Item{
-		OrderId:   orderId,
-		ProductId: productId,
-		Quantity:  quantity,
+func (repo *ItemRepository) AddItems(ctx context.Context,
+	orderId int64, positions []parameters.Position) (*[]models.Item, error) {
+	orderPositions := make([]models.Item, len(positions))
+	for _, position := range positions {
+		orderPositions = append(orderPositions, models.Item{
+			OrderId:   orderId,
+			ProductId: position.ProductId,
+			Quantity:  position.Quantity,
+		})
 	}
 
 	result := repo.dB.WithContext(ctx).
-		Create(&order)
+		Create(&orderPositions)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return &order, nil
+	return &orderPositions, nil
 }
