@@ -81,7 +81,7 @@ func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("quantity", gorm.Expr("quantity - ?", increment))
+		Update("quantity", gorm.Expr("quantity + ?", increment))
 
 	if result.Error != nil {
 		return result.Error
@@ -107,4 +107,17 @@ func (repo *ProductRepository) DecreaseQuantity(ctx context.Context,
 		return errors.New("insufficient stock or product not found")
 	}
 	return nil
+}
+
+func (repo *ProductRepository) NumberOfProducts(ctx context.Context) (int64, error) {
+	var count int64
+	result := repo.dB.WithContext(ctx).
+		Model(&models.Product{}).
+		Count(&count)
+
+	if result.Error != nil {
+		return -1, result.Error
+	}
+
+	return count, nil
 }

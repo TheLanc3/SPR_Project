@@ -2,11 +2,17 @@ package loader
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"spr-project/models"
+	"spr-project/repositories"
 	"strconv"
 	"strings"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 type ProductInventory struct {
@@ -16,10 +22,11 @@ type ProductInventory struct {
 	Quantity    int
 }
 
-func ReadFile(filename string, prodSlice []ProductInventory) ([]ProductInventory, error) {
+func ReadFile(filename string, db *gorm.DB) error {
+	var prodSlice []ProductInventory
 	file, err := os.Open(filename)
 	if err != nil {
-		return prodSlice, fmt.Errorf("ошибка открытия файла: %w", err)
+		return fmt.Errorf("ошибка открытия файла: %w", err)
 	}
 	defer file.Close()
 
@@ -59,20 +66,66 @@ func ReadFile(filename string, prodSlice []ProductInventory) ([]ProductInventory
 						}
 
 					} else {
-						return prodSlice, fmt.Errorf("price is absent for Name: %s", item.Name)
+						return fmt.Errorf("price is absent for Name: %s", item.Name)
 					}
 				} else {
-					return prodSlice, fmt.Errorf("description is absent for Name: %s", item.Name)
+					return fmt.Errorf("description is absent for Name: %s", item.Name)
 				}
 			} else {
-				return prodSlice, fmt.Errorf("description and Price are absent for Name: %s", item.Name)
+				return fmt.Errorf("description and Price are absent for Name: %s", item.Name)
 			}
 		}
 		prodSlice = append(prodSlice, item)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return prodSlice, fmt.Errorf("ошибка чтения файла: %w", err)
+		return fmt.Errorf("ошибка чтения файла: %w", err)
 	}
-	return prodSlice, nil
+
+	charToFind := "."
+	var supplierName string
+	index := strings.Index(filename, charToFind)
+	if index != -1 {
+		supplierName = filename[:index]
+	} else {
+		supplierName = filename
+	}
+
+	var supplier models.Supplier
+	res := db.Where("name = ?", supplierName).First(&supplier)
+	var supplierId int64
+	if res.Error != nil {
+		if res.Error == gorm.ErrRecordNotFound {
+			fmt.Printf("Supplier %s not found.\n", supplierName)
+		} else {
+			fmt.Printf("Error retrieving supplier: %v\n", res.Error)
+		}
+	} else {
+		supplierId = supplier.Id
+	}
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	for _, value := range prodSlice {
+		// Retrieve a product by its name
+		var product models.Product
+		result := db.Where("name = ?", value.Name).First(&product)
+		productRepo := repositories.NewProductRepository(db)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				db.FirstOrCreate(&models.Product{}, models.Product{Name: value.Name, Description: value.Description,
+					Price: value.Price, Quantity: value.Quantity, SupplierId: supplierId})
+			} else {
+				fmt.Printf("Error retrieving product: %v\n", result.Error)
+			}
+		} else {
+			err := productRepo.IncreaseQuantity(ctx, value.Quantity, product.Id)
+			if err != nil {
+				s := fmt.Errorf("error: %s, - to increase quantity for product with Id: %d", err, product.Id)
+				fmt.Println(s)
+			}
+		}
+	}
+
+	return nil
 }

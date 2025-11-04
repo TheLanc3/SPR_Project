@@ -1,13 +1,18 @@
 package terminal
 
 import (
+	"context"
 	"fmt"
-	"spr-project/loader"
+	"spr-project/repositories"
+	"time"
+
+	"gorm.io/gorm"
 )
 
-func Terminal(supplierInventory []loader.ProductInventory) bool {
+func Terminal(db *gorm.DB) bool {
 	var choice int
 	retVal := true
+
 	for retVal {
 		fmt.Println("1. To know the number of products in the stock inventory.")
 		fmt.Println("2. To create a new order.")
@@ -17,10 +22,20 @@ func Terminal(supplierInventory []loader.ProductInventory) bool {
 		if err != nil {
 			fmt.Println("Error reading input:", err)
 		}
+		// Create a context with a timeout
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
 		switch choice {
 		case 1:
-			numberOfProducts := len(supplierInventory)
-			fmt.Printf("The number of products in the stock inventory: %d", numberOfProducts)
+			productRepo := repositories.NewProductRepository(db)
+			numberOfProducts, err := productRepo.NumberOfProducts(ctx)
+			if err != nil {
+				s := fmt.Errorf("func (repo *repositories.ProductRepository) NumberOfProducts return error: %s", err)
+				fmt.Println(s)
+			} else {
+				fmt.Printf("The number of products in the stock inventory: %d\n", numberOfProducts)
+			}
+
 		case 2:
 			fmt.Println("Stub for an order creation.")
 		case 3:
