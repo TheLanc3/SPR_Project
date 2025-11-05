@@ -81,7 +81,7 @@ func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("quantity", gorm.Expr("quantity - ?", increment))
+		Update("quantity", gorm.Expr("quantity + ?", increment))
 
 	if result.Error != nil {
 		return result.Error
