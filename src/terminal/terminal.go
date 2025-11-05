@@ -23,11 +23,12 @@ func Terminal(db *gorm.DB) bool {
 			fmt.Println("Error reading input:", err)
 		}
 		// Create a context with a timeout
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Second)
 		defer cancel()
 		switch choice {
 		case 1:
 			productRepo := repositories.NewProductRepository(db)
+			suppRepo := repositories.NewSupplierRepository(db)
 			numberOfProducts, err := productRepo.NumberOfProducts(ctx)
 			if err != nil {
 				s := fmt.Errorf("func (repo *repositories.ProductRepository) NumberOfProducts return error: %s", err)
@@ -35,7 +36,38 @@ func Terminal(db *gorm.DB) bool {
 			} else {
 				fmt.Printf("The number of products in the stock inventory: %d\n", numberOfProducts)
 			}
-
+			details := true
+			for details {
+				fmt.Printf("Enter a number in the range from 1 to %d for details about particular product or anyother key to exit this section.\n",
+					numberOfProducts)
+				var iD int64
+				_, err := fmt.Scanf("%d", &iD)
+				if err != nil || iD < 1 || iD > numberOfProducts {
+					details = false
+					choice = 0
+				} else {
+					prod, erroR := productRepo.GetProduct(ctx, iD)
+					if erroR != nil {
+						s := fmt.Errorf("func (repo *ProductRepository) GetProduct return error: %s", erroR)
+						fmt.Println(s)
+					} else {
+						var suppName string
+						ctX, cancel := context.WithTimeout(context.Background(), 2000*time.Second)
+						defer cancel()
+						supp, errors := suppRepo.GetSupplier(ctX, prod.SupplierId)
+						if errors != nil {
+							s := fmt.Errorf("func (repo *SupplierRepository) GetSupplier return error: %s", errors)
+							fmt.Println(s)
+						} else {
+							suppName = supp.Name
+						}
+						fmt.Printf("Name:\t\t%s\n", prod.Name)
+						fmt.Printf("Description:\t%s\n", prod.Description)
+						fmt.Printf("Quantity:\t%d\n", prod.Quantity)
+						fmt.Printf("Supplier:\t%s\n", suppName)
+					}
+				}
+			}
 		case 2:
 			fmt.Println("Stub for an order creation.")
 		case 3:
