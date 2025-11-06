@@ -7,6 +7,7 @@ import (
 	"spr-project/database"
 	"spr-project/loader"
 	"spr-project/terminal"
+	"spr-project/verificator"
 	"time"
 
 	"gorm.io/gorm"
@@ -22,6 +23,12 @@ func worker(id int, jobs <-chan int, results chan<- int, b *bool, db *gorm.DB) {
 			for *b {
 				*b = terminal.Terminal(db)
 			}
+		case 2: //Verifier
+			for *b {
+				verificator.Verifier(db)
+				time.Sleep(100 * time.Second)
+			}
+
 		default: //The stub for other cases
 			for *b {
 				time.Sleep(time.Second)

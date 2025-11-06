@@ -22,13 +22,14 @@ func Terminal(db *gorm.DB) bool {
 		if err != nil {
 			fmt.Println("Error reading input:", err)
 		}
-		// Create a context with a timeout
-		ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Second)
-		defer cancel()
+
 		switch choice {
 		case 1:
 			productRepo := repositories.NewProductRepository(db)
 			suppRepo := repositories.NewSupplierRepository(db)
+			// Create a context with a timeout
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
 			numberOfProducts, err := productRepo.NumberOfProducts(ctx)
 			if err != nil {
 				s := fmt.Errorf("func (repo *repositories.ProductRepository) NumberOfProducts return error: %s", err)
@@ -46,13 +47,15 @@ func Terminal(db *gorm.DB) bool {
 					details = false
 					choice = 0
 				} else {
-					prod, erroR := productRepo.GetProduct(ctx, iD)
+					cTx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+					defer cancel()
+					prod, erroR := productRepo.GetProduct(cTx, iD)
 					if erroR != nil {
 						s := fmt.Errorf("func (repo *ProductRepository) GetProduct return error: %s", erroR)
 						fmt.Println(s)
 					} else {
 						var suppName string
-						ctX, cancel := context.WithTimeout(context.Background(), 2000*time.Second)
+						ctX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 						defer cancel()
 						supp, errors := suppRepo.GetSupplier(ctX, prod.SupplierId)
 						if errors != nil {

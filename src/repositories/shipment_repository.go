@@ -50,3 +50,22 @@ func (repo *ShipmentRepository) UpdateShipmentStatus(ctx context.Context,
 
 	return result.Error
 }
+
+func (repo *ShipmentRepository) VerifyThatShipmenttAlreadyExist(ctx context.Context,
+	productId int64) (bool, error) {
+	var counter int64
+	retVal := false
+	result := repo.dB.WithContext(ctx).
+		Model(&models.Shipment{}).
+		Where("product_id = ?", productId).
+		Where("status <> ?", enums.Delivered).
+		Where("status <> ?", enums.Canceled).
+		Count(&counter)
+	if result.Error != nil {
+		return retVal, result.Error
+	}
+	if counter > 0 {
+		retVal = true
+	}
+	return retVal, nil
+}
