@@ -3,6 +3,7 @@ package verificator
 import (
 	"context"
 	"fmt"
+	"spr-project/mailing"
 	"spr-project/parameters"
 	"spr-project/repositories"
 	"time"
@@ -34,7 +35,6 @@ func Verifier(db *gorm.DB) {
 			} else {
 				var newShipment []parameters.ShipmentData
 				if prod.Quantity < 10 {
-					var suppName string
 					ctX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 					defer cancel()
 					shipmentExist, err := shipRepo.VerifyThatShipmenttAlreadyExist(ctX, prod.Id)
@@ -43,14 +43,7 @@ func Verifier(db *gorm.DB) {
 						fmt.Println(s)
 					} else {
 						if !shipmentExist {
-							supp, errors := suppRepo.GetSupplier(ctX, prod.SupplierId)
-							if errors != nil {
-								s := fmt.Errorf("func (repo *SupplierRepository) GetSupplier return error: %s", errors)
-								fmt.Println(s)
-							} else {
-								suppName = supp.Name
-							}
-							fmt.Printf("%s product of %s supplier (with id: %d) has %d quantity.\n", prod.Name, prod.Supplier.Id, suppName, prod.Quantity)
+							fmt.Printf("%s product of supplier (id: %d) has %d quantity.\n", prod.Name, prod.Supplier.Id, prod.Quantity)
 							//Add new Shipment
 							newShipment = append(newShipment, parameters.ShipmentData{prod.Id, 30, prod.Supplier.Id})
 						}
@@ -66,6 +59,25 @@ func Verifier(db *gorm.DB) {
 					} else {
 						for _, value := range *shipments {
 							fmt.Printf("New shipment was created for %d product_id with id: %d\n", value.ProductId, value.Id)
+							Tx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+							defer cancel()
+							prod, erroR := productRepo.GetProduct(Tx, i)
+							if erroR != nil {
+								s := fmt.Errorf("func (repo *ProductRepository) GetProduct return error: %s", erroR)
+								fmt.Println(s)
+							} else {
+								var suppMail string
+								ctX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+								defer cancel()
+								supp, errors := suppRepo.GetSupplier(ctX, prod.SupplierId)
+								if errors != nil {
+									s := fmt.Errorf("func (repo *SupplierRepository) GetSupplier return error: %s", errors)
+									fmt.Println(s)
+								} else {
+									suppMail = supp.Email
+								}
+								mailing.SendEmail(suppMail, prod.Name, value.Quantity, int(value.Id))
+							}
 						}
 					}
 				}
