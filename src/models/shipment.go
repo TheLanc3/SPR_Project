@@ -10,8 +10,8 @@ type Shipment struct {
 	ProductId  int64        `gorm:"column:product_id"`
 	Quantity   int          `gorm:"column:quantity"`
 	SupplierId int64        `gorm:"column:supplier_id"`
-	CreatedAt  time.Time    `gorm:"column:created_at;serializer:unixtime;autoCreateTime"`
+	CreatedAt  time.Time    `gorm:"column:created_at;autoCreateTime"`
 	Status     enums.Status `gorm:"column:status;default:1"`
-	UpdatedAt  time.Time    `gorm:"column:created_at;serializer:unixtime;autoUpdateTime"`
+	UpdatedAt  time.Time    `gorm:"column:created_at;autoUpdateTime"`
 	Product    Product      `gorm:"foreignKey:ProductId;references:Id"`
 }
