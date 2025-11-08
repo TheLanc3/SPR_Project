@@ -120,7 +120,9 @@ func (repo *OrderRepository) UpdateStatus(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Order{}).
 		Where("id = ?", id).
-		Update("quantity", newStatus)
+		Updates(map[string]interface{}{
+			"Status": newStatus,
+		})
 
 	return result.Error
 }

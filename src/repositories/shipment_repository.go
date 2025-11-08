@@ -61,7 +61,9 @@ func (repo *ShipmentRepository) UpdateShipmentStatus(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Shipment{}).
 		Where("id = ?", shipmentId).
-		Update("status = ?", status)
+		Updates(map[string]interface{}{
+			"Status": status,
+		})
 
 	return result.Error
 }

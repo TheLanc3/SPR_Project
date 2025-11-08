@@ -61,7 +61,9 @@ func (repo *ProductRepository) UpdateDescription(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("description", newDescription)
+		Updates(map[string]interface{}{
+			"Description": newDescription,
+		})
 
 	return result.Error
 }
@@ -71,7 +73,9 @@ func (repo *ProductRepository) UpdatePrice(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("price", newPrice)
+		Updates(map[string]interface{}{
+			"Price": newPrice,
+		})
 
 	return result.Error
 }
@@ -81,7 +85,9 @@ func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Product{}).
 		Where("id = ?", id).
-		Update("quantity", gorm.Expr("quantity + ?", increment))
+		Updates(map[string]interface{}{
+			"Quantity": gorm.Expr("quantity + ?", increment),
+		})
 
 	if result.Error != nil {
 		return result.Error
@@ -98,7 +104,9 @@ func (repo *ProductRepository) DecreaseQuantity(ctx context.Context,
 		Model(&models.Product{}).
 		Where("id = ?", id).
 		Where("quantity >= ?", decrement).
-		Update("quantity", gorm.Expr("quantity - ?", decrement))
+		Updates(map[string]interface{}{
+			"Quantity": gorm.Expr("quantity - ?", decrement),
+		})
 
 	if result.Error != nil {
 		return result.Error
