@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"spr-project/models"
+	"spr-project/parameters"
 	"spr-project/repositories"
 	"strconv"
 	"strings"
@@ -103,20 +104,20 @@ func ReadFile(filename string, db *gorm.DB) error {
 	} else {
 		supplierId = supplier.Id
 	}
+	productRepo := repositories.NewProductRepository(db)
 	// Create a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
+	var newProduct []parameters.Product
 	for _, value := range prodSlice {
 		// Retrieve a product by its name
 		var product models.Product
 		result := db.Where("name = ?", value.Name).First(&product)
-		productRepo := repositories.NewProductRepository(db)
+
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
-				db.FirstOrCreate(&models.Product{}, models.Product{Name: value.Name, Description: value.Description,
+				newProduct = append(newProduct, parameters.Product{Name: value.Name, Description: value.Description,
 					Price: value.Price, Quantity: value.Quantity, SupplierId: supplierId})
-			} else {
-				fmt.Printf("Error retrieving product: %v\n", result.Error)
 			}
 		} else {
 			err := productRepo.IncreaseQuantity(ctx, value.Quantity, product.Id)
@@ -124,6 +125,13 @@ func ReadFile(filename string, db *gorm.DB) error {
 				s := fmt.Errorf("error: %s, - to increase quantity for product with Id: %d", err, product.Id)
 				fmt.Println(s)
 			}
+		}
+	}
+	if len(newProduct) > 0 {
+		_, err := productRepo.AddProducts(ctx, newProduct)
+		if err != nil {
+			s := fmt.Errorf("error: %s, - to add a product", err)
+			fmt.Println(s)
 		}
 	}
 

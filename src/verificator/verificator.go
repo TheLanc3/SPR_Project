@@ -3,9 +3,11 @@ package verificator
 import (
 	"context"
 	"fmt"
+	"spr-project/enums"
 	"spr-project/mailing"
 	"spr-project/parameters"
 	"spr-project/repositories"
+	"spr-project/supplier"
 	"time"
 
 	"gorm.io/gorm"
@@ -19,12 +21,20 @@ func Verifier(db *gorm.DB) {
 	productRepo := repositories.NewProductRepository(db)
 	suppRepo := repositories.NewSupplierRepository(db)
 	shipRepo := repositories.NewShipmentRepository(db)
+	stockRepo := repositories.NewStockRepository(db)
 	numberOfProducts, err := productRepo.NumberOfProducts(ctx)
 	var i int64
 	if err != nil {
 		s := fmt.Errorf("func (repo *repositories.ProductRepository) NumberOfProducts return error: %s", err)
 		fmt.Println(s)
 	} else {
+		tx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		stk, erroR := stockRepo.GetStock(tx, 1)
+		if erroR != nil {
+			s := fmt.Errorf("func (repo *StockRepository) GetStock return error for Id 1: %s", erroR)
+			fmt.Println(s)
+		}
 		for i = 1; i <= numberOfProducts; i++ {
 			cTx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
@@ -76,7 +86,27 @@ func Verifier(db *gorm.DB) {
 								} else {
 									suppMail = supp.Email
 								}
-								mailing.SendEmail(suppMail, prod.Name, value.Quantity, int(value.Id))
+								mailing.SendEmail(suppMail, prod.Name, value.Quantity, int(value.Id), &stk)
+								time.Sleep(5 * time.Second)
+								//should be in future in separate thread
+								supplier.Supplier(stk.Email, prod.Name, value.Quantity, int(value.Id), &supp)
+								//should be in future in separate thread too
+								cTX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+								defer cancel()
+								err := shipRepo.UpdateShipmentStatus(cTX, value.Id, enums.Shipped)
+								if err != nil {
+									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", errors)
+									fmt.Println(s)
+								}
+								//should be in future in separate thread too
+								/*CtX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+								defer cancel()
+								productService = services.NewProductService(db)
+								err := productService.RegisterProductShipments(CtX, newShipment)
+								if err != nil {
+									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", errors)
+									fmt.Println(s)
+								}*/
 							}
 						}
 					}

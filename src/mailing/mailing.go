@@ -3,12 +3,13 @@ package mailing
 import (
 	"fmt"
 	"net/smtp"
+	"spr-project/models"
 )
 
 func SendEmail(recipient string, position string, quantity int,
-	shipmentID int) {
+	shipmentID int, stk *models.Stock) {
 
-	from := "spr.project2025@gmail.com"
+	from := stk.Email
 	password := "obko epnp bgxa piol" // Use app password for services like Gmail
 	to := []string{recipient}
 	smtpHost := "smtp.gmail.com" // Example for Gmail
@@ -21,7 +22,10 @@ func SendEmail(recipient string, position string, quantity int,
 		"Quantity: " + fmt.Sprintf("%d", quantity) + "\r\n" +
 		"Please indicate the shipment ID [" +
 		fmt.Sprintf("%d", shipmentID) +
-		"] in the accompanying paper when sending.")
+		"] in the accompanying paper when sending.\r\n\r\n" +
+		"Sincerely " + stk.Name + "\r\n" +
+		stk.Phone + "\r\n" +
+		stk.Address)
 
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
@@ -30,5 +34,5 @@ func SendEmail(recipient string, position string, quantity int,
 		fmt.Println("Error sending email:", err)
 		return
 	}
-	fmt.Println("Email sent successfully!")
+	fmt.Println("Email to supplier has been sent successfully!")
 }
