@@ -10,7 +10,7 @@ type Order struct {
 	CustomerId int64        `gorm:"column:customer_id"`
 	Customer   Customer     `gorm:"foreignKey:CustomerId;references:Id"`
 	Total      int          `gorm:"column:total"`
-	CreatedAt  time.Time    `gorm:"column:created_at;serializer:unixtime;autoCreateTime"`
+	CreatedAt  time.Time    `gorm:"column:created_at;autoCreateTime"`
 	Status     enums.Status `gorm:"column:status;default:0"`
-	UpdatedAt  time.Time    `gorm:"column:updated_at;serializer:unixtime;autoUpdateTime"`
+	UpdatedAt  time.Time    `gorm:"column:created_at;autoUpdateTime"`
 }
