@@ -18,6 +18,21 @@ func NewShipmentRepository(db *gorm.DB) *ShipmentRepository {
 	return &repo
 }
 
+func (repo *ShipmentRepository) GetShipmentById(
+	ctx context.Context,
+	id int64) (*models.Shipment, error) {
+	var shipment models.Shipment
+
+	result := repo.dB.WithContext(ctx).
+		Where("id = ?", id).
+		Select(&shipment)
+
+	if result.Error != nil {
+		return &models.Shipment{}, nil
+	}
+	return &shipment, nil
+}
+
 func (repo *ShipmentRepository) AddShipments(
 	ctx context.Context,
 	data []parameters.ShipmentData) (*[]models.Shipment, error) {

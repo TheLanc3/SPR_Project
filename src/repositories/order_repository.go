@@ -17,6 +17,22 @@ func NewOrderRepository(db *gorm.DB) *OrderRepository {
 	return &repo
 }
 
+func (repo *OrderRepository) GetOrderById(ctx context.Context,
+	id int64) (*models.Order, error) {
+	var order models.Order
+
+	result := repo.dB.WithContext(ctx).
+		Preload("Positions").
+		Where("id = ?", id).
+		Find(&order)
+
+	if result.Error != nil {
+		return &models.Order{}, result.Error
+	}
+
+	return &order, nil
+}
+
 func (repo *OrderRepository) GetOrdersByCustomer(ctx context.Context,
 	customerId int64, limit int) (*[]models.Order, error) {
 	var orders []models.Order

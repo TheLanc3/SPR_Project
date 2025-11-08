@@ -60,8 +60,25 @@ func (service *OrderService) UpdateOrderStatus(ctx context.Context,
 	orderId int64, status enums.Status) error {
 	err := service.dB.Transaction(func(tx *gorm.DB) error {
 		orderRepo := repositories.NewOrderRepository(tx)
+		productRepo := repositories.NewProductRepository(tx)
+
+		order, err := orderRepo.GetOrderById(ctx, orderId)
+
+		if err != nil {
+			return err
+		}
+
 		if err := orderRepo.UpdateStatus(ctx, status, orderId); err != nil {
 			return err
+		}
+
+		if status == enums.Canceled {
+			for _, position := range order.Positions {
+				if err := productRepo.IncreaseQuantity(ctx, position.Quantity,
+					position.ProductId); err != nil {
+					return nil
+				}
+			}
 		}
 
 		return nil
