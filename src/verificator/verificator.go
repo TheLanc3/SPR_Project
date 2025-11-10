@@ -8,6 +8,7 @@ import (
 	"spr-project/models"
 	"spr-project/parameters"
 	"spr-project/repositories"
+	"spr-project/services"
 	"spr-project/supplier"
 	"time"
 
@@ -15,29 +16,16 @@ import (
 )
 
 func DeliveryCheckIn(db *gorm.DB, deliveredShipment *models.Shipment) error {
-	productRepo := repositories.NewProductRepository(db)
-	shipRepo := repositories.NewShipmentRepository(db)
+	supplierServ := services.NewSupplierService(db)
+	var shipmentStatus []parameters.ShipmentUpdateData
+	shipmentStatus = append(shipmentStatus, parameters.ShipmentUpdateData{Id: deliveredShipment.Id, Status: enums.Delivered})
+	shipmentStatus = append(shipmentStatus, parameters.ShipmentUpdateData{Id: deliveredShipment.Id, Status: enums.Completed})
 	// Create a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	error := shipRepo.UpdateShipmentStatus(ctx, deliveredShipment.Id, enums.Delivered)
-	if error != nil {
-		return error
-	}
-	cTx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	erroR := productRepo.IncreaseQuantity(cTx, deliveredShipment.Quantity, deliveredShipment.ProductId)
-	if erroR != nil {
-		return erroR
-	}
-	cTX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	err := shipRepo.UpdateShipmentStatus(cTX, deliveredShipment.Id, enums.Completed)
-	if err != nil {
-		return err
-	}
+	error := supplierServ.UpdateProductShipmentsStatus(ctx, shipmentStatus)
 
-	return nil
+	return error
 }
 
 func Verifier(db *gorm.DB) {
