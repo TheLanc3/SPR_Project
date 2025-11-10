@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"spr-project/enums"
 	"spr-project/mailing"
+	"spr-project/models"
 	"spr-project/parameters"
 	"spr-project/repositories"
 	"spr-project/supplier"
@@ -12,6 +13,32 @@ import (
 
 	"gorm.io/gorm"
 )
+
+func DeliveryCheckIn(db *gorm.DB, deliveredShipment *models.Shipment) error {
+	productRepo := repositories.NewProductRepository(db)
+	shipRepo := repositories.NewShipmentRepository(db)
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	error := shipRepo.UpdateShipmentStatus(ctx, deliveredShipment.Id, enums.Delivered)
+	if error != nil {
+		return error
+	}
+	cTx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	erroR := productRepo.IncreaseQuantity(cTx, deliveredShipment.Quantity, deliveredShipment.ProductId)
+	if erroR != nil {
+		return erroR
+	}
+	cTX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err := shipRepo.UpdateShipmentStatus(cTX, deliveredShipment.Id, enums.Completed)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func Verifier(db *gorm.DB) {
 	// Create a context with a timeout
@@ -95,18 +122,15 @@ func Verifier(db *gorm.DB) {
 								defer cancel()
 								err := shipRepo.UpdateShipmentStatus(cTX, value.Id, enums.Shipped)
 								if err != nil {
-									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", errors)
+									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", err)
 									fmt.Println(s)
 								}
 								//should be in future in separate thread too
-								/*CtX, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-								defer cancel()
-								productService = services.NewProductService(db)
-								err := productService.RegisterProductShipments(CtX, newShipment)
-								if err != nil {
-									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", errors)
+								erR := DeliveryCheckIn(db, &value)
+								if erR != nil {
+									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", erR)
 									fmt.Println(s)
-								}*/
+								}
 							}
 						}
 					}
