@@ -102,6 +102,13 @@ func (service *SupplierService) UpdateProductShipmentsStatus(ctx context.Context
 					return err
 				}
 			}
+
+			err = repoShipment.UpdateShipmentStatus(ctx,
+				shipmentData.Id, shipment.Status)
+
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
