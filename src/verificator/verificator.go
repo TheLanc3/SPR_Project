@@ -80,9 +80,9 @@ func Verifier(db *gorm.DB) {
 						fmt.Println(s)
 					} else {
 						if !shipmentExist {
-							fmt.Printf("%s product of supplier (id: %d) has %d quantity.\n", prod.Name, prod.Supplier.Id, prod.Quantity)
+							fmt.Printf("%s product of supplier (id: %d) has %d quantity.\n", prod.Name, prod.SupplierId, prod.Quantity)
 							//Add new Shipment
-							newShipment = append(newShipment, parameters.ShipmentData{prod.Id, 30, prod.Supplier.Id})
+							newShipment = append(newShipment, parameters.ShipmentData{prod.Id, 30, prod.SupplierId})
 						}
 					}
 				}

@@ -75,7 +75,7 @@ func (repo *ShipmentRepository) VerifyThatShipmenttAlreadyExist(ctx context.Cont
 	result := repo.dB.WithContext(ctx).
 		Model(&models.Shipment{}).
 		Where("product_id = ?", productId).
-		Where("status <> ?", enums.Delivered).
+		Where("status <> ?", enums.Completed).
 		Where("status <> ?", enums.Canceled).
 		Count(&counter)
 	if result.Error != nil {
