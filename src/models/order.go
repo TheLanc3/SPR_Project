@@ -13,5 +13,5 @@ type Order struct {
 	Total      int          `gorm:"column:total"`
 	CreatedAt  time.Time    `gorm:"column:created_at;autoCreateTime"`
 	Status     enums.Status `gorm:"column:status;default:0"`
-	UpdatedAt  time.Time    `gorm:"column:created_at;autoUpdateTime"`
+	UpdatedAt  time.Time    `gorm:"column:updated_at;autoUpdateTime"`
 }
