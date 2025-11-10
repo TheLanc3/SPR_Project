@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"spr-project/checkIn"
 	"spr-project/database"
 	"spr-project/loader"
 	"spr-project/terminal"
@@ -23,12 +24,16 @@ func worker(id int, jobs <-chan int, results chan<- int, b *bool, db *gorm.DB) {
 			for *b {
 				*b = terminal.Terminal(db)
 			}
-		case 2: //Verifier
+		case 2: //VerifiercheckIn
 			for *b {
 				verificator.Verifier(db)
 				time.Sleep(100 * time.Second)
 			}
-
+		case 3: //CheckInDelivery
+			for *b {
+				checkIn.CheckInDelivery()
+				time.Sleep(20 * time.Second)
+			}
 		default: //The stub for other cases
 			for *b {
 				time.Sleep(time.Second)
