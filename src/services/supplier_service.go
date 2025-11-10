@@ -27,6 +27,15 @@ func (service *SupplierService) GetSupplierById(ctx context.Context,
 	return &supplier, err
 }
 
+func (service *SupplierService) GetSuppliers(ctx context.Context,
+	limit int, offset int) (*[]models.Supplier, error) {
+	repo := repositories.NewSupplierRepository(service.dB)
+
+	suppliers, err := repo.GetSuppliers(ctx, limit, offset)
+
+	return suppliers, err
+}
+
 func (service *SupplierService) RegisterSupplier(ctx context.Context,
 	data parameters.SupplierData) (*models.Supplier, error) {
 	var supplier models.Supplier
@@ -92,6 +101,13 @@ func (service *SupplierService) UpdateProductShipmentsStatus(ctx context.Context
 					shipmentData.ProductId); err != nil {
 					return err
 				}
+			}
+
+			err = repoShipment.UpdateShipmentStatus(ctx,
+				shipmentData.Id, shipment.Status)
+
+			if err != nil {
+				return err
 			}
 		}
 
