@@ -41,7 +41,8 @@ func createOrder(db *gorm.DB) error {
 					orderServ := services.NewOrderService(db)
 					var orderPositions []parameters.Position
 					fmt.Printf("Enter the product ID and quautity pairs to create positions of the order\n"+
-						"the product ID must be in the range from 1 to %d, set it to zerro to finish the position creation.\n", numberOfProducts)
+						"the product ID must be in the range from 1 to %d, set it to zerro "+
+						"to finish the position creation.\n", numberOfProducts)
 					var ID int64
 					ID = 1
 					var qnty int
@@ -65,8 +66,16 @@ func createOrder(db *gorm.DB) error {
 								return err
 							}
 						} else {
-							orderPositions = append(orderPositions,
-								parameters.Position{ProductId: ID, Quantity: qnty})
+							cTx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+							defer cancel()
+							prod, erroR := productRepo.GetProduct(cTx, ID)
+							if erroR != nil {
+								return erroR
+							} else {
+								orderPositions = append(orderPositions,
+									parameters.Position{ProductId: ID, Price: prod.Price,
+										Quantity: qnty})
+							}
 						}
 					}
 				}
