@@ -25,7 +25,7 @@ func (repo *ShipmentRepository) GetShipmentById(
 
 	result := repo.dB.WithContext(ctx).
 		Where("id = ?", id).
-		Select(&shipment)
+		Find(&shipment)
 
 	if result.Error != nil {
 		return &models.Shipment{}, nil

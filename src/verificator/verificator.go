@@ -21,7 +21,7 @@ func DeliveryCheckIn(db *gorm.DB, deliveredShipment *models.Shipment) error {
 	shipmentStatus = append(shipmentStatus, parameters.ShipmentUpdateData{Id: deliveredShipment.Id, Status: enums.Delivered})
 	shipmentStatus = append(shipmentStatus, parameters.ShipmentUpdateData{Id: deliveredShipment.Id, Status: enums.Completed})
 	// Create a context with a timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Second)
 	defer cancel()
 	error := supplierServ.UpdateProductShipmentsStatus(ctx, shipmentStatus)
 
