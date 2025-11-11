@@ -11,7 +11,7 @@ func NewOrderCreationData(customerId int64,
 	var total int
 
 	for _, position := range positions {
-		total += position.Quantity
+		total += position.Quantity * position.Price
 	}
 
 	return OrderCreationData{customerId, total, positions}
