@@ -47,3 +47,16 @@ func (repo *CustomerRepository) AddCustomer(ctx context.Context,
 
 	return &customer, nil
 }
+
+func (repo *CustomerRepository) NumberOfCustomers(ctx context.Context) (int64, error) {
+	var count int64
+	result := repo.dB.WithContext(ctx).
+		Model(&models.Customer{}).
+		Count(&count)
+
+	if result.Error != nil {
+		return -1, result.Error
+	}
+
+	return count, nil
+}

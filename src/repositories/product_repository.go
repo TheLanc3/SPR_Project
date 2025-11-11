@@ -93,7 +93,7 @@ func (repo *ProductRepository) IncreaseQuantity(ctx context.Context,
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.New("insufficient stock or product not found")
+		return errors.New("product not found")
 	}
 	return nil
 }
