@@ -12,6 +12,6 @@ type Shipment struct {
 	SupplierId int64        `gorm:"column:supplier_id"`
 	CreatedAt  time.Time    `gorm:"column:created_at;autoCreateTime"`
 	Status     enums.Status `gorm:"column:status;default:0"`
-	UpdatedAt  time.Time    `gorm:"column:created_at;autoUpdateTime"`
+	UpdatedAt  time.Time    `gorm:"column:updated_at;autoUpdateTime"`
 	Product    Product      `gorm:"foreignKey:ProductId;references:Id"`
 }
