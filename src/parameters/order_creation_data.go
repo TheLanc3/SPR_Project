@@ -19,5 +19,6 @@ func NewOrderCreationData(customerId int64,
 
 type Position struct {
 	ProductId int64
+	Price     int
 	Quantity  int
 }
