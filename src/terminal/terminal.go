@@ -39,8 +39,7 @@ func createOrder(db *gorm.DB) error {
 					return erR
 				} else {
 					orderServ := services.NewOrderService(db)
-					var orderPositions parameters.OrderCreationData
-					orderPositions.CustomerId = iD
+					var orderPositions []parameters.Position
 					fmt.Printf("Enter the product ID and quautity pairs to create positions of the order\n"+
 						"the product ID must be in the range from 1 to %d, set it to zerro to finish the position creation.\n", numberOfProducts)
 					var ID int64
@@ -49,15 +48,16 @@ func createOrder(db *gorm.DB) error {
 					for ID > 0 && ID <= numberOfProducts {
 						_, err := fmt.Scanf("%d %d", &ID, &qnty)
 						if err != nil || ID < 1 || ID > numberOfProducts {
-							if len(orderPositions.Positions) > 0 {
+							if len(orderPositions) > 0 {
 								ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 								defer cancel()
-								order, err := orderServ.CreateNewOrder(ctx, orderPositions)
+								newOrder := parameters.NewOrderCreationData(iD, orderPositions)
+								order, err := orderServ.CreateNewOrder(ctx, newOrder)
 								if err == nil {
 									cust, eRr := customerRepo.GetCustomer(ctx, iD)
 									if eRr == nil {
-										fmt.Printf("New order with Id: %d, - was created for customer %s",
-											order.Id, cust.Name)
+										fmt.Printf("New order with Id: %d, - was created for customer %s for amount %d\n",
+											order.Id, cust.Name, order.Total)
 									} else {
 										return eRr
 									}
@@ -65,7 +65,7 @@ func createOrder(db *gorm.DB) error {
 								return err
 							}
 						} else {
-							orderPositions.Positions = append(orderPositions.Positions,
+							orderPositions = append(orderPositions,
 								parameters.Position{ProductId: ID, Quantity: qnty})
 						}
 					}
