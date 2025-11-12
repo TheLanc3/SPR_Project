@@ -31,7 +31,7 @@ func worker(id int, jobs <-chan int, results chan<- int, b *bool, db *gorm.DB) {
 			}
 		case 3: //CheckInDelivery
 			for *b {
-				checkIn.CheckInDelivery()
+				checkIn.CheckInDelivery(db)
 				time.Sleep(20 * time.Second)
 			}
 		default: //The stub for other cases

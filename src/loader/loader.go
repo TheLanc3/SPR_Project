@@ -26,6 +26,7 @@ type ProductInventory struct {
 func ReadFile(filename string, db *gorm.DB) error {
 	var prodSlice []ProductInventory
 	file, err := os.Open(filename)
+
 	if err != nil {
 		return fmt.Errorf("ошибка открытия файла: %w", err)
 	}
@@ -55,7 +56,7 @@ func ReadFile(filename string, db *gorm.DB) error {
 							item.Price = price
 							quantity, erR := strconv.Atoi(priceQuantity[m+1:])
 							if erR != nil {
-								log.Fatalf("Error converting Price string to int: %v, for Name: %s", err, item.Name)
+								log.Fatalf("Error converting Quantity string to int: %v, for Name: %s", err, item.Name)
 							}
 							item.Quantity = quantity
 						} else {

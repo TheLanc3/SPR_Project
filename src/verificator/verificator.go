@@ -116,7 +116,7 @@ func Verifier(db *gorm.DB) {
 								//should be in future in separate thread too
 								erR := DeliveryCheckIn(db, &value)
 								if erR != nil {
-									s := fmt.Errorf("func (repo *ShipmentRepository) UpdateShipmentStatus return error: %s", erR)
+									s := fmt.Errorf("func DeliveryCheckIn return error: %s", erR)
 									fmt.Println(s)
 								}
 							}
