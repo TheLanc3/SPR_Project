@@ -19,7 +19,7 @@ func NewItemRepository(db *gorm.DB) *ItemRepository {
 
 func (repo *ItemRepository) AddItems(ctx context.Context,
 	orderId int64, positions []parameters.Position) (*[]models.Item, error) {
-	orderPositions := make([]models.Item, len(positions))
+	orderPositions := make([]models.Item, 0)
 	for _, position := range positions {
 		orderPositions = append(orderPositions, models.Item{
 			OrderId:   orderId,
