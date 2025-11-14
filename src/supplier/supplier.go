@@ -23,9 +23,6 @@ func Supplier(recipient string, position string, quantity int,
 		"\r\n" +
 		"Product: " + position + "\r\n" +
 		"Quantity: " + fmt.Sprintf("%d", quantity) + "\r\n" +
-		"Please indicate the shipment ID [" +
-		fmt.Sprintf("%d", shipmentID) +
-		"] in the accompanying paper when sending. \r\n\r\n" +
 		"Sincerely " + supp.Name + "\r\n" +
 		supp.Phone + "\r\n" +
 		supp.Address)

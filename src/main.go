@@ -19,7 +19,7 @@ func worker(id int, jobs <-chan int, results chan<- int, b *bool, db *gorm.DB) {
 	retVal := 0
 	for j := range jobs {
 		fmt.Println("worker", id, "started  job", j)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 		switch j {
 		case 1: //The terminal
 			for *b {
@@ -28,7 +28,7 @@ func worker(id int, jobs <-chan int, results chan<- int, b *bool, db *gorm.DB) {
 		case 2: //VerifiercheckIn
 			for *b {
 				verificator.Verifier(db)
-				time.Sleep(100 * time.Second)
+				time.Sleep(20 * time.Second)
 			}
 		case 3: //CheckInDelivery
 			for *b {
